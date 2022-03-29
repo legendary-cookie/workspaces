@@ -27,22 +27,22 @@ function delFromIndex() {
 
 case $1 in
 cd)
-  if [ -e $data/active ]; then
-    cd $(realpath $data/active)
-    exec $SHELL
-  else 
-    echo "There is no active workspace right now"
-  fi
-  ;;
+	if [ -e $data/active ]; then
+		cd $(realpath $data/active)
+		exec $SHELL
+	else
+		echo "There is no active workspace right now"
+	fi
+	;;
 activate | act | active)
 	if [ -z "$2" ]; then
 		echo "You have to supply the name of the workspace!"
 		exit 1
 	fi
-        rm -f $data/active
-        name="$2"
-        ln -s $data/$name $data/active
-        ;;
+	rm -f $data/active
+	name="$2"
+	ln -s $data/$name $data/active
+	;;
 list | ls)
 	echo "Workspaces:"
 	for ws in $(echo "$json" | jq -r '.[].name'); do
