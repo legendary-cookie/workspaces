@@ -1,2 +1,90 @@
 #!/bin/bash
-echo "Hello World"
+data="$HOME/WORKSPACES"
+mkdir -p $data
+wsData="$HOME/WORKSPACES/index.json"
+
+if [ ! -f $wsData ]; then
+	echo "[]" >$wsData
+fi
+
+if [ $# -eq 0 ]; then
+	echo "You have to supply an argument!"
+	exit 1
+fi
+
+json="$(cat $wsData)"
+
+function addToIndex() {
+	local name=$1
+	local url=$2
+	echo "$json" | jq ".[. | length] |= . + {\"name\":\"$name\", \"url\": \"$url\"}" >$wsData
+}
+
+function delFromIndex() {
+	local name="$1"
+	echo "$json" | jq "del(.[] | select(.name == \"$name\"))" >$wsData
+}
+
+case $1 in
+cd)
+  if [ -e $data/active ]; then
+    cd $(realpath $data/active)
+    exec $SHELL
+  else 
+    echo "There is no active workspace right now"
+  fi
+  ;;
+activate | act | active)
+	if [ -z "$2" ]; then
+		echo "You have to supply the name of the workspace!"
+		exit 1
+	fi
+        rm -f $data/active
+        name="$2"
+        ln -s $data/$name $data/active
+        ;;
+list | ls)
+	echo "Workspaces:"
+	for ws in $(echo "$json" | jq -r '.[].name'); do
+		echo "* $ws"
+	done
+	;;
+update | pull)
+	if [ -z "$2" ]; then
+		for ws in $(echo "$json" | jq -r '.[].name'); do
+			cd $data/$ws
+			git pull
+		done
+	else
+		cd $data/$2
+		git pull
+	fi
+	;;
+delete | del | rm)
+	echo "Deleting workspace ..."
+	if [ -z "$2" ]; then
+		echo "You have to supply the name of the workspace!"
+		exit 1
+	fi
+	name="$2"
+	rm -rf $data/$name
+	delFromIndex $name
+	echo "Deleted workspace!"
+	;;
+clone)
+	echo "Cloning git repository ..."
+	name=""
+	url="$2"
+	if [ ! -z "$3" ]; then
+		name="$3"
+	else
+		name="${url##*/}"
+	fi
+	git clone "$url" "$data/$name"
+	addToIndex "$name" "$url"
+	echo "Cloned git repository!"
+	;;
+*)
+	echo "Subcommand not known."
+	;;
+esac
