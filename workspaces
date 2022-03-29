@@ -84,7 +84,18 @@ clone)
 	addToIndex "$name" "$url"
 	echo "Cloned git repository!"
 	;;
+help)
+	echo "Available subcommands:"
+	echo "* list"
+	echo "* delete <ws>"
+	echo "* update [ws]"
+	echo "* clone <url> [name]"
+	echo "* cd"
+	echo "* activate <ws>"
+	echo ""
+	echo "For bugs and issues, please use https://github.com/legendary-cookie/workspaces/issues"
+	;;
 *)
-	echo "Subcommand not known."
+	echo "Subcommand not known. Try using 'help' for help."
 	;;
 esac
